@@ -24,12 +24,12 @@ class NewVisitorTest(unittest.TestCase):
         # проверяем что в гаоловке тега head в ответе содержится "To-Do"
         self.assertIn("To-Do", self.browser.title)
         # ищем заголовок первого уровня и пытаемся забрать его содержимое
-        handler_text = self.browser.find_element(by=By.TAG_NAME('h1')).text
+        handler_text = self.browser.find_element(by=By.TAG_NAME, value='h1').text
         # проверяем содержится ли в заголовке строка "To-Do"
         self.assertIn('To-Do', handler_text)
 
         # получаем объект поля ввода по атрибуту id
-        inputbox = self.browser.find_element(by=By.ID('id_new_item'))
+        inputbox = self.browser.find_element(by=By.ID, value='id_new_item')
         # от объекта поля сравниваем содержимое атрибута placeholder с ожидаемым
         self.assertEqual(
             inputbox.get_attribute('placeholder'),
@@ -42,12 +42,13 @@ class NewVisitorTest(unittest.TestCase):
         # ожидаем одну секунду
         time.sleep(1)
         # получаем объект элемента таблицы по атрибуту id
-        table = self.browser.find_element(by=By.ID('id_list_table'))
+        table = self.browser.find_element(by=By.ID, value='id_list_table')
         # через объект таблицы пытаемся получить доступ к дочерним элементам tr
-        rows = table.find_elements(by=By.TAG_NAME('tr'))
+        rows = table.find_elements(by=By.TAG_NAME, value='tr')
         # перебираем найденные строки и ищем ожидаемую
         self.assertTrue(
-            any(row.text == '1: Купить павлиньи перья' for row in rows)
+            any(row.text == '1: Купить павлиньи перья' for row in rows),
+            "Новый элемент списка не появился в таблице"
         )
         # провоцируем фэйл теста т.к приложение еще не завершено
         self.fail("Закончить тест!")
