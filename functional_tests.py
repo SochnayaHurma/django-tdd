@@ -16,6 +16,15 @@ class NewVisitorTest(unittest.TestCase):
         """ снос """
         self.browser.quit()
 
+    def check_for_row_in_list_table(self, row_text: str) -> None:
+        """
+        Проверка на наличие указанной в строки в таблице
+        """
+        table = self.browser.find_element(by=By.ID, value='id_list_table')
+        rows = table.find_elements(by=By.TAG_NAME, value='tr')
+        print(rows)
+        self.assertIn(row_text, [row.text for row in rows])
+
     def test_can_start_a_list_and_retrieve_it_later(self):
         """ тест можно начать список и получить его позже """
 
@@ -40,25 +49,14 @@ class NewVisitorTest(unittest.TestCase):
         # провоцируем отправку формы регистрируя событие нажатия клавиши enter в поле ввода
         inputbox.send_keys(Keys.ENTER)
         # ожидаем одну секунду
-        time.sleep(2)
+        time.sleep(1)
         inputbox = self.browser.find_element(by=By.ID, value='id_new_item')
 
         inputbox.send_keys('Сделать мушку из павлиньих перьев')
         inputbox.send_keys(Keys.ENTER)
-        time.sleep(2)
-        # получаем объект элемента таблицы по атрибуту id
-        table = self.browser.find_element(by=By.ID, value='id_list_table')
-        # через объект таблицы пытаемся получить доступ к дочерним элементам tr
-        rows = table.find_elements(by=By.TAG_NAME, value='tr')
-        # перебираем найденные строки и ищем ожидаемую
-        self.assertIn(
-            '1: Купить павлиньи перья',
-            [row.text for row in rows]
-        )
-        self.assertIn(
-            '2: Сделать мушку из павлиньих перьев',
-            [row.text for row in rows]
-        )
+        time.sleep(1)
+        self.check_for_row_in_list_table('1: Купить павлиньи перья',)
+        self.check_for_row_in_list_table('2: Сделать мушку из павлиньих перьев')
         # провоцируем фэйл теста т.к приложение еще не завершено
         self.fail("Закончить тест!")
 
