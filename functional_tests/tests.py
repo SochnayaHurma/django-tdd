@@ -66,7 +66,7 @@ class NewVisitorTest(LiveServerTestCase):
 
         inputbox.send_keys('Сделать мушку из павлиньих перьев')
         inputbox.send_keys(Keys.ENTER)
-        self.wait_for_row_in_list_table('1: Купить павлиньи перья',)
+        self.wait_for_row_in_list_table('1: Купить павлиньи перья')
         self.wait_for_row_in_list_table('2: Сделать мушку из павлиньих перьев')
         # провоцируем фэйл теста т.к приложение еще не завершено
 
@@ -82,8 +82,8 @@ class NewVisitorTest(LiveServerTestCase):
 
         edith_list_url = self.browser.current_url
         self.assertRegex(edith_list_url, '/lists/.+')
-
         self.browser.quit()
+
         self.browser = webdriver.Firefox()
         self.browser.get(self.live_server_url)
         page_text = self.browser.find_element(By.TAG_NAME, value='body').text
