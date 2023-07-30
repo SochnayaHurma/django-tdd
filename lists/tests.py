@@ -76,6 +76,14 @@ class ListViewTest(TestCase):
         self.assertNotContains(response, other_elem1.text)
         self.assertNotContains(response, other_elem2.text)
 
+    def test_passes_correct_list_to_template(self):
+        """Тест: Проверка на наличие объекта текущего списка в контексте запроса"""
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+
+        response = self.client.get(f"/lists/{correct_list.pk}/")
+        self.assertEqual(response.context.get("list"), correct_list)
+
 
 class NewListTest(TestCase):
     """Тесты представления создания списка"""
@@ -98,3 +106,35 @@ class NewListTest(TestCase):
         response = self.client.post("/lists/new", data={'item_text': 'A new list item'})
         todo_list = List.objects.first()
         self.assertRedirects(response, f"/lists/{todo_list.pk}/")
+
+
+class NewItemTest(TestCase):
+    """Набор тестов представления добавляющего новые элементы в существующий список"""
+    def test_can_save_a_POST_request_to_an_existing_list(self):
+        """Тест: Проверяет что после POST запроса запись привязывается к нужному списку"""
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+
+        self.client.post(
+            f"/lists/{correct_list.id}/add_item",
+            data={"item_text": "A new item for an existing list"}
+        )
+
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, "A new item for an existing list")
+        self.assertEqual(new_item.list, correct_list)
+
+    def test_redirects_to_do_list_view(self):
+        """Тест: Проверка на то, что
+            1. После POST запроса произойдет redirect_status 302
+            2. Нас перенаправит страницу списка дел к которому мы привязывали запись
+        """
+        other_list = List.objects.create()
+        correct_list = List.objects.create()
+
+        response = self.client.post(
+            f"/lists/{correct_list.id}/add_item",
+            data={"item_text": "A new item for an existing list"}
+        )
+        self.assertRedirects(response, f"/lists/{correct_list.id}/")
