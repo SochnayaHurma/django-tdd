@@ -1,0 +1,38 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <title>To-Do lists</title>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3 p-5 mb-4 bg-body-tertiary rounded-3">
+            <div class="text-center">
+                <h1>{% block header_text %}{% endblock header_text %}</h1>
+                <form action="{% block form_action %}{% endblock form_action %}" method="POST">
+                    {% csrf_token %}
+                    <input type="text"
+                           name="item_text"
+                           class="form-control-lg"
+                           id="id_new_item"
+                           placeholder="Enter a to-do item"/>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6 offset-md-3">
+            {% block table %}{% endblock table %}
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
