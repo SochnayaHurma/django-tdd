@@ -14,6 +14,29 @@ class HomePagetest(TestCase):
         self.assertTemplateUsed(response, 'home.html')
 
 
+class NewListTest(TestCase):
+    """Тесты представления создания списка"""
+
+    def test_can_save_a_POST_request(self):
+        """
+        Тест: пробует отправить POST запрос и получить в теле ответа отправленную запись
+        """
+        response = self.client.post("/lists/new", data={
+            'item_text': 'A new list item'
+        })
+        self.assertEqual(Item.objects.count(), 1)
+        new_item = Item.objects.first()
+        self.assertIn(new_item.text, 'A new list item')
+
+    def test_redirects_after_POST(self):
+        """
+        Тест: на переадресацию после POST запроса
+        """
+        response = self.client.post("/lists/new", data={'item_text': 'A new list item'})
+        todo_list = List.objects.first()
+        self.assertRedirects(response, f"/lists/{todo_list.pk}/")
+
+
 class ListAndItemModelTest(TestCase):
     """
     Тест модели списка
@@ -83,29 +106,6 @@ class ListViewTest(TestCase):
 
         response = self.client.get(f"/lists/{correct_list.pk}/")
         self.assertEqual(response.context.get("list"), correct_list)
-
-
-class NewListTest(TestCase):
-    """Тесты представления создания списка"""
-
-    def test_can_save_a_POST_request(self):
-        """
-        Тест: пробует отправить POST запрос и получить в теле ответа отправленную запись
-        """
-        response = self.client.post("/lists/new", data={
-            'item_text': 'A new list item'
-        })
-        self.assertEqual(Item.objects.count(), 1)
-        new_item = Item.objects.first()
-        self.assertIn(new_item.text, 'A new list item')
-
-    def test_redirects_after_POST(self):
-        """
-        Тест: на переадресацию после POST запроса
-        """
-        response = self.client.post("/lists/new", data={'item_text': 'A new list item'})
-        todo_list = List.objects.first()
-        self.assertRedirects(response, f"/lists/{todo_list.pk}/")
 
 
 class NewItemTest(TestCase):

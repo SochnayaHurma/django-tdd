@@ -1,3 +1,5 @@
+import os
+
 from selenium import webdriver
 from selenium.common import WebDriverException
 from selenium.webdriver.common.keys import Keys
@@ -16,6 +18,8 @@ class NewVisitorTest(StaticLiveServerTestCase):
     def setUp(self):
         """ установка """
         self.browser = webdriver.Firefox()
+        staging_server = os.environ.get('STAGING_SERVER')
+        self.live_server_url = 'http://' + staging_server
     
     def tearDown(self):
         """ снос """
