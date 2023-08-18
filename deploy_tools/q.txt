@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn server for $django-tdd
+
+[Service]
+Restart=on-failure
+User=$USER
+WorkingDirectory=/home/$USER/sites/$django-tdd/source
+ExecStart=/home/$USER/sites/$django-tdd/virtualenv/bin/gunicorn --bind \
+        unix:/tmp/$django-tdd.socket \
+        superlists.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
