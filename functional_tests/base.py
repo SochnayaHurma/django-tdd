@@ -1,3 +1,4 @@
+from typing import Callable
 from selenium.webdriver import Firefox
 from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
@@ -16,6 +17,16 @@ class FunctionalTest(StaticLiveServerTestCase):
 
     def tearDown(self) -> None:
         self.browser.quit()
+
+    def wait_for(self, func: Callable):
+        start_time = time.time()
+        while True:
+            try:
+                return func()
+            except (AssertionError, WebDriverException) as e:
+                if time.time() - start_time > MAX_WAIT:
+                    raise e
+                time.sleep(0.5)
 
     def wait_for_row_in_list_table(self, row_text: str) -> None:
         """
