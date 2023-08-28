@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
 from lists.models import Item, List
 
@@ -37,3 +38,18 @@ class ListAndItemModelTest(TestCase):
         self.assertEqual(first_saved_item.list, todo_list)
         self.assertEqual(second_saved_item.text, 'Item the second')
         self.assertEqual(second_saved_item.list, todo_list)
+
+    def test_cannot_save_empty_list_items(self) -> None:
+        """Тест проверяет возбуждение исключения при попытки создания пустой записи"""
+
+        list_object = List.objects.create()
+        item = Item(list=list_object, text='')
+
+        with self.assertRaises(ValidationError):
+            item.save()
+            item.full_clean()
+
+    def test_get_absolute_url(self) -> None:
+        """Тест на выдачу абсолютного пути на каждый объект модели"""
+        todo_list = List.objects.create()
+        self.assertEqual(todo_list.get_absolute_url(), f"/lists/{todo_list.id}/")

@@ -22,7 +22,7 @@ class TestItemValidation(FunctionalTest):
         )
 
         self.browser.find_element(by=By.ID, value="id_new_item").send_keys("Buy milk")
-        self.browser.find_element(By=By.ID, value="id_new_item").send_keys(Keys.ENTER)
+        self.browser.find_element(by=By.ID, value="id_new_item").send_keys(Keys.ENTER)
         self.wait_for_row_in_list_table("1: Buy milk")
 
         self.browser.find_element(by=By.ID, value="id_new_item").send_keys(Keys.ENTER)

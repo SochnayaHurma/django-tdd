@@ -1,4 +1,5 @@
 from django.test import TestCase
+from django.utils.html import escape
 
 from lists.models import Item, List
 
@@ -36,6 +37,21 @@ class NewListTest(TestCase):
         todo_list = List.objects.first()
         self.assertRedirects(response, f"/lists/{todo_list.pk}/")
 
+    def test_validation_errors_are_sent_back_to_home_page_template(self) -> None:
+        """Тест: ожидающий ошибку валидации после отправки пустого текста в форме"""
+        response = self.client.post('/lists/new', data={'item_text': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'home.html')
+        expected_error = 'You can`t have an empty list item'
+        self.assertContains(response, expected_error)
+
+    def test_invalid_list_items_arent_saved(self) -> None:
+        """Тест: ожидает что если пост не прошел валидацию он не создаст новый объект"""
+
+        self.client.post("/lists/new", data={"item_text": ""})
+        self.assertEqual(List.objects.count(), 0)
+        self.assertEqual(Item.objects.count(), 0)
+
 
 class ListViewTest(TestCase):
     """
@@ -71,16 +87,13 @@ class ListViewTest(TestCase):
         response = self.client.get(f"/lists/{correct_list.pk}/")
         self.assertEqual(response.context.get("list"), correct_list)
 
-
-class NewItemTest(TestCase):
-    """Набор тестов представления добавляющего новые элементы в существующий список"""
     def test_can_save_a_POST_request_to_an_existing_list(self):
         """Тест: Проверяет что после POST запроса запись привязывается к нужному списку"""
         other_list = List.objects.create()
         correct_list = List.objects.create()
 
         self.client.post(
-            f"/lists/{correct_list.id}/add_item",
+            f"/lists/{correct_list.id}/",
             data={"item_text": "A new item for an existing list"}
         )
 
@@ -89,7 +102,7 @@ class NewItemTest(TestCase):
         self.assertEqual(new_item.text, "A new item for an existing list")
         self.assertEqual(new_item.list, correct_list)
 
-    def test_redirects_to_do_list_view(self):
+    def test_POST_redirects_to_list_view(self):
         """Тест: Проверка на то, что
             1. После POST запроса произойдет redirect_status 302
             2. Нас перенаправит страницу списка дел к которому мы привязывали запись
@@ -98,7 +111,17 @@ class NewItemTest(TestCase):
         correct_list = List.objects.create()
 
         response = self.client.post(
-            f"/lists/{correct_list.id}/add_item",
+            f"/lists/{correct_list.id}/",
             data={"item_text": "A new item for an existing list"}
         )
         self.assertRedirects(response, f"/lists/{correct_list.id}/")
+
+    def test_validation_errors_end_up_on_lists_page(self) -> None:
+        """Тест: проверяет вывод ошибки валидации при отправке некорректной формы"""
+
+        todo_list = List.objects.create()
+        response = self.client.post(f"/lists/{todo_list.pk}/", data={"item_text": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "list.html")
+        expected_error = escape("You can`t have an empty list item")
+        self.assertContains(response, expected_error)

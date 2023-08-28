@@ -1,8 +1,12 @@
 from django.db import models
+from django.urls import reverse
 
 
 class List(models.Model):
     """Модель содержащая поля списка дел"""
+
+    def get_absolute_url(self) -> str:
+        return reverse("unique-list", args=[self.id])
 
 
 class Item(models.Model):

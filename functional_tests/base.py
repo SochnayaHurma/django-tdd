@@ -18,7 +18,8 @@ class FunctionalTest(StaticLiveServerTestCase):
     def tearDown(self) -> None:
         self.browser.quit()
 
-    def wait_for(self, func: Callable):
+    @staticmethod
+    def wait_for(func: Callable):
         start_time = time.time()
         while True:
             try:

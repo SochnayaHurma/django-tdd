@@ -23,6 +23,11 @@
                            class="form-control-lg"
                            id="id_new_item"
                            placeholder="Enter a to-do item"/>
+                    {% if error %}
+                    <div class="form-group has-error">
+                        <span class="help-block">{{ error }}</span>
+                    </div>
+                    {% endif %}
                 </form>
             </div>
         </div>
