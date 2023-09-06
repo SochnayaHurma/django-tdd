@@ -2,6 +2,7 @@ from typing import Callable
 from selenium.webdriver import Firefox
 from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
 import time
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
@@ -45,3 +46,6 @@ class FunctionalTest(StaticLiveServerTestCase):
                 if time.time() - start_time > MAX_WAIT:
                     raise e
                 time.sleep(0.5)
+
+    def get_item_input_box(self) -> WebElement:
+        return self.browser.find_element(by=By.ID, value="id_text")

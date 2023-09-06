@@ -21,7 +21,7 @@ class TestNewVisitor(FunctionalTest):
         self.assertIn('To-Do', handler_text)
 
         # получаем объект поля ввода по атрибуту id
-        inputbox = self.browser.find_element(by=By.ID, value='id_new_item')
+        inputbox = self.get_item_input_box()
         # от объекта поля сравниваем содержимое атрибута placeholder с ожидаемым
         self.assertEqual(
             inputbox.get_attribute('placeholder'),
@@ -35,7 +35,7 @@ class TestNewVisitor(FunctionalTest):
         self.wait_for_row_in_list_table('1: Купить павлиньи перья',)
 
         # ожидаем одну секунду
-        inputbox = self.browser.find_element(by=By.ID, value='id_new_item')
+        inputbox = self.get_item_input_box()
 
         inputbox.send_keys('Сделать мушку из павлиньих перьев')
         inputbox.send_keys(Keys.ENTER)
@@ -48,7 +48,7 @@ class TestNewVisitor(FunctionalTest):
         Тест: проверка что каждый пользователь получает уникальный адрес с личным списком
         """
         self.browser.get(self.live_server_url)
-        input_box = self.browser.find_element(By.ID, value="id_new_item")
+        input_box = self.get_item_input_box()
         input_box.send_keys('Купить павлиньи перья')
         input_box.send_keys(Keys.ENTER)
         self.wait_for_row_in_list_table('1: Купить павлиньи перья')
@@ -63,7 +63,7 @@ class TestNewVisitor(FunctionalTest):
         self.assertNotIn('Купить павлиньи перья', page_text)
         self.assertNotIn('Сделать мушку', page_text)
 
-        input_box = self.browser.find_element(By.ID, value="id_new_item")
+        input_box = self.get_item_input_box()
         input_box.send_keys('Купить молоко')
         input_box.send_keys(Keys.ENTER)
         self.wait_for_row_in_list_table('1: Купить молоко')
@@ -75,3 +75,18 @@ class TestNewVisitor(FunctionalTest):
         page_text = self.browser.find_element(By.TAG_NAME, value='body').text
         self.assertNotIn('Купить павлиньи перья', page_text)
         self.assertIn('Купить молоко', page_text)
+
+    def test_cannot_add_duplicate_items(self) -> None:
+        """Тест: эмуляция пользователя добавляющего дупликат существующего элемента"""
+        self.browser.get(self.live_server_url)
+        self.get_item_input_box().send_keys("Buy wellies")
+        self.get_item_input_box().send_keys(Keys.ENTER)
+        self.wait_for_row_in_list_table("1: Buy wellies")
+
+        self.get_item_input_box().send_keys("Buy wellies")
+        self.get_item_input_box().send_keys(Keys.ENTER)
+
+        self.wait_for(lambda: self.assertEquals(
+            self.browser.find_element(by=By.CSS_SELECTOR, value=".has-error").text,
+            "You`ve already got this in your list."
+        ))
