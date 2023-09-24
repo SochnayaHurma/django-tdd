@@ -87,6 +87,6 @@ class TestNewVisitor(FunctionalTest):
         self.get_item_input_box().send_keys(Keys.ENTER)
 
         self.wait_for(lambda: self.assertEquals(
-            self.browser.find_element(by=By.CSS_SELECTOR, value=".has-error").text,
+            self.get_error_element().text,
             "You`ve already got this in your list."
         ))

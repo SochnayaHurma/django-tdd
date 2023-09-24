@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.html import escape
 
 from lists.models import Item, List
-from lists.forms import ItemForm
+from lists.forms import ItemForm, ExistingListItemForm
 
 
 def home_page(request: HttpRequest) -> HttpResponse:
@@ -15,12 +15,12 @@ def home_page(request: HttpRequest) -> HttpResponse:
 def view_list(request: HttpRequest, list_id: int) -> HttpResponse:
     """ Функция представления списка дел """
     todo_list = List.objects.get(pk=list_id)
-    form = ItemForm()
+    form = ExistingListItemForm(for_list=todo_list)
 
     if request.method == 'POST':
-        form = ItemForm(request.POST)
+        form = ExistingListItemForm(for_list=todo_list, data=request.POST)
         if form.is_valid():
-            form.save(for_list=todo_list)
+            form.save()
             return redirect(todo_list)
     return render(request, "list.html", {"list": todo_list, "form": form})
 

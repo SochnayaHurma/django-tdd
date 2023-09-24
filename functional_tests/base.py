@@ -49,3 +49,6 @@ class FunctionalTest(StaticLiveServerTestCase):
 
     def get_item_input_box(self) -> WebElement:
         return self.browser.find_element(by=By.ID, value="id_text")
+
+    def get_error_element(self) -> WebElement:
+        return self.browser.find_element(by=By.CSS_SELECTOR, value=".has-error")

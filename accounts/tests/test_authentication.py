@@ -32,3 +32,22 @@ class AuthenticationTest(TestCase):
         token = Token.objects.create(email=email)
         user = PasswordAuthenticationBackend().authenticate(uid=token.uid)
         self.assertEqual(expected_user, user)
+
+
+class GetUserTest(TestCase):
+    """Набор тестов проверяющих функцию выдачи пользователя по PrimaryKey переданной из сессии"""
+
+    def test_gets_user_by_email(self) -> None:
+        """Тест: при существующем пользователе get_user должна корректно вернуть его объект"""
+        User.objects.create(email="qwaa@gmail.com")
+        email = "bentadjik@gmail.com"
+        created_user = User.objects.create(email=email)
+        found_user = PasswordAuthenticationBackend().get_user(email=email)
+        self.assertEqual(found_user, created_user)
+
+    def test_returns_None_if_no_user_with_that_email(self) -> None:
+        """Тест: при несуществующем пользователе ожидаем None"""
+        user = PasswordAuthenticationBackend().get_user(email="qwef@gmail.com")
+        self.assertIsNone(user)
+
+

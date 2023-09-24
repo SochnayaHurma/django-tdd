@@ -4,5 +4,6 @@ from lists.views import home_page
 urlpatterns = [
     re_path(r'^$', home_page, name='home'),
     re_path(r'lists/', include('lists.urls')),
+    re_path(r'accounts/', include('accounts.urls', namespace='accounts')),
 ]
 

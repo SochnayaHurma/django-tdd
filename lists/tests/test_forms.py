@@ -55,3 +55,10 @@ class ExistingListItemFormTest(TestCase):
         form = ExistingListItemForm(for_list=todo_list, data={"text": dummy_text})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['text'], [DUPLICATE_ITEM_ERROR])
+
+    def test_form_save(self) -> None:
+        """Тест: переопределенный метод .save формы корректно сохраняет данные"""
+        todo_list = List.objects.create()
+        form = ExistingListItemForm(for_list=todo_list, data={"text": "qweqwe"})
+        new_item = form.save()
+        self.assertEqual(new_item, Item.objects.all()[0])

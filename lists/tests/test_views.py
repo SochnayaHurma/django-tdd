@@ -3,7 +3,9 @@ from django.utils.html import escape
 from django.http import HttpResponse
 
 from lists.models import Item, List
-from lists.forms import ItemForm, EMPTY_ITEM_ERROR
+from lists.forms import (
+    ItemForm, ExistingListItemForm,
+    EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR)
 
 
 class HomePagetest(TestCase):
@@ -164,7 +166,7 @@ class ListViewTest(TestCase):
     def test_for_invalid_input_passes_form_to_template(self) -> None:
         """Тест: объект form корректно передается в шаблон"""
         response = self.post_invalid_input()
-        self.assertIsInstance(response.context.get("form"), ItemForm)
+        self.assertIsInstance(response.context.get("form"), ExistingListItemForm)
 
     def test_validation_errors_end_up_on_lists_page(self) -> None:
         """Тест: при некорректном вводе в ответе присутсвует ожидаемый текст ошибки"""
@@ -174,7 +176,7 @@ class ListViewTest(TestCase):
     def test_displays_item_form(self) -> None:
         todo_list = List.objects.create()
         response = self.client.get(f"/lists/{todo_list.pk}/")
-        self.assertIsInstance(response.context.get("form"), ItemForm)
+        self.assertIsInstance(response.context.get("form"), ExistingListItemForm)
         self.assertContains(response, 'name="text"')
 
     def test_duplicate_item_validation_errors_end_up_on_lists_page(self) -> None:
