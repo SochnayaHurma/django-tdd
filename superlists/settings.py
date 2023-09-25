@@ -131,6 +131,10 @@ STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'static'))
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Login
+
+LOGOUT_REDIRECT_URL = '/'
+
 # SMTP
 
 EMAIL_HOST = 'smtp.rambler.ru'

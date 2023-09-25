@@ -8,6 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="icon" href="{% static '/images/cat-favicon.png' %}">
     <title>To-Do lists</title>
 </head>
 <body>
@@ -18,7 +19,7 @@
             {% if user.email %}
                 <ul class="nav navbar-nav navbar-right">
                     <li class="navbar-text">Logged in as {{ user.email }}</li>
-                    <li><a href="#">Log out</a></li>
+                    <li><a href="{% url 'accounts:logout'%}">Log out</a></li>
                 </ul>
             {% else %}
                 <form action="{% url 'accounts:send_login_email' %}" method="POST" class="navbar-form navbar-right">
