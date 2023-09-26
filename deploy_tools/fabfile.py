@@ -62,6 +62,7 @@ def _update_database(source_folder: str) -> None:
     ../virtualenv/bin/python3 manage.py migrate --noinput
     """)
 
+
 def deploy():
     """Реализует инструкцию для развертывания
         - Создает структуру директорий в проекте (если её не существует)

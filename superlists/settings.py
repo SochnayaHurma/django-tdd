@@ -23,9 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent
 SECRET_KEY = 'django-insecure-fvu*7p=%i=gec5&+++a6%d5h5j-g=#q4@4*+nh3^lst&6x@9z7'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
+
+if not DEBUG:
+    ALLOWED_HOSTS.append(os.environ.get("STAGING_SERVER"))
 
 
 # Application definition
