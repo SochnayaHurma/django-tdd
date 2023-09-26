@@ -4,6 +4,8 @@ from selenium.webdriver.common.keys import Keys
 
 from .base import FunctionalTest
 
+from time import sleep
+
 
 class TestItemValidation(FunctionalTest):
     """

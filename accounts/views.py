@@ -10,6 +10,9 @@ from accounts.models import Token
 from accounts.utils import add_get_params
 
 
+SUBJECT = "Your login link for Superlists"
+
+
 def send_login_email(request: HttpRequest) -> HttpResponse:
     email = request.POST.get("email")
     if email and len(email.split("@")) == 2:
@@ -21,7 +24,7 @@ def send_login_email(request: HttpRequest) -> HttpResponse:
             )
         )
         send_mail(
-            'Your login link for Superlists',
+            SUBJECT,
             f'Your login link for Superlists {url}',
             settings.EMAIL_HOST_USER,
             [email]
