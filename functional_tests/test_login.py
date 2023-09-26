@@ -29,17 +29,18 @@ class LoginTest(FunctionalTest):
         start = time.time()
         inbox = poplib.POP3_SSL('pop.rambler.ru', 995)
         try:
-            inbox.user(settings.EMAIL_HOST_USER)
+            inbox.user(test_email)
             inbox.pass_(settings.EMAIL_HOST_PASSWORD)
             while time.time() - start < 60:
                 count, _ = inbox.stat()
                 for i in reversed(range(max(1, count - 10), count + 1)):
                     _, lines, _ = inbox.retr(i)
-                    lines = [line.decode('utf8') for line in lines]
+                    lines = [line.decode('latin-1') for line in lines]
                     if f'Subject: {subject}' in lines:
                         email_id = i
                         body = '\n'.join(lines)
                         return body
+            time.sleep(5)
         finally:
             if email_id:
                 inbox.dele(email_id)
@@ -48,7 +49,7 @@ class LoginTest(FunctionalTest):
     def test_can_get_email_link_to_log_in(self) -> None:
         """тест: пользователь регистрируется и получает уникадбну. ссыдку входа по электронной почте"""
         if self.staging_server:
-            test_email = 'bentadjik@gmail.com'
+            test_email = 'testdjango@rambler.ru'
         else:
             test_email = 'edit@example.com'
         self.browser.get(self.live_server_url)
