@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpRequest
 from django.core.exceptions import ValidationError
 from django.utils.html import escape
+from typing import Optional
 
 from lists.models import Item, List
 from lists.forms import ItemForm, ExistingListItemForm
@@ -33,3 +34,7 @@ def new_list(request: HttpRequest) -> HttpResponse:
         form.save(for_list=todo_list)
         return redirect(todo_list)
     return render(request, 'home.html', {"form": form})
+
+
+def my_lists(request: HttpRequest, email: Optional[str] = None) -> HttpResponse:
+    return render(request, 'my_lists.html', {})

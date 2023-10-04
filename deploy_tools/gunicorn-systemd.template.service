@@ -8,7 +8,6 @@ Environment=EMAIL=bentadjik@gmail.com
 WorkingDirectory=/home/$USER/sites/$SITE_NAME/source
 ExecStart=/home/$USER/sites/$SITE_NAME/virtualenv/bin/gunicorn \
         --bind unix:/tmp/$SITE_NAME.socket \
-        --capture-output \
         --access-logfile ../access.log \
         --error-logfile ../error.log \
         superlists.wsgi:application

@@ -70,7 +70,6 @@ class LoginTest(FunctionalTest):
         self.assertIn(self.live_server_url, url)
 
         self.browser.get(url)
-
         self.wait_to_be_logged_in(email=test_email)
 
         self.browser.find_element(by=By.LINK_TEXT, value='Log out').click()

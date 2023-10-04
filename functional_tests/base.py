@@ -1,12 +1,15 @@
 from selenium.webdriver import Firefox
 from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
 from typing import Callable
 import time
 import os
+
+from .server_tools import reset_database
 
 
 MAX_WAIT = 10
@@ -31,6 +34,7 @@ class FunctionalTest(StaticLiveServerTestCase):
         self.staging_server = os.environ.get('STAGING_SERVER')
         if self.staging_server:
             self.live_server_url = f'http://{self.staging_server}'
+            reset_database(self.staging_server)
 
     def tearDown(self) -> None:
         self.browser.quit()
@@ -76,3 +80,15 @@ class FunctionalTest(StaticLiveServerTestCase):
 
     def get_error_element(self) -> WebElement:
         return self.browser.find_element(by=By.CSS_SELECTOR, value=".has-error")
+
+    def add_list_item(self, item_text: str) -> None:
+        """
+        Фикстура: добавляет указанный текст в input ввода и отправляет следом константу Enter
+        для ввода
+        """
+        run_rows = len(self.browser.find_elements(by=By.CSS_SELECTOR, value='#id_list_table tr'))
+
+        self.get_item_input_box().send_keys(item_text)
+        self.get_item_input_box().send_keys(Keys.ENTER)
+
+        self.wait_for_row_in_list_table(f'{run_rows + 1}: {item_text}')
