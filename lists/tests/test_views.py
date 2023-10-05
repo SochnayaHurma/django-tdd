@@ -1,11 +1,15 @@
 from django.test import TestCase
 from django.utils.html import escape
 from django.http import HttpResponse
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 
 from lists.models import Item, List
 from lists.forms import (
     ItemForm, ExistingListItemForm,
     EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR)
+
+User: AbstractUser = get_user_model()
 
 
 class HomePagetest(TestCase):
@@ -77,6 +81,17 @@ class NewListTest(TestCase):
         """При недопустимом вводе представление передает в контекст объект формы"""
         response = self.client.post("/lists/new", data={"text": ""})
         self.assertIsInstance(response.context.get("form"), ItemForm)
+
+    def test_list_owner_is_saved_if_user_is_authenticated(self) -> None:
+        """
+        Тест: атрибут owner у созданного объекта списка после POST запроса заполняется
+        авторизованным пользователем или null
+        """
+        user = User.objects.create(email='abc@mail.ru')
+        self.client.force_login(user)
+        self.client.post('/lists/new/', data={'text': 'new_item'})
+        todo_list = List.objects.first()
+        self.assertEqual(todo_list.owner, user)
 
 
 class ListViewTest(TestCase):
@@ -203,5 +218,15 @@ class MyListsTest(TestCase):
         """
         Тест: на корректность вывода шаблона
         """
+        User.objects.create(email='a@b.com')
         response = self.client.get('/lists/users/a@b.com/')
         self.assertTemplateUsed(response, 'my_lists.html')
+
+    def test_passes_correct_owner_to_template(self) -> None:
+        """
+        Тест: в контекст попадает ожидаемый объект пользователя указанный в параметре запроса
+        """
+        User.objects.create(email='wrong@owner.com')
+        correct_user = User.objects.create(email='exprected@owner.com')
+        response = self.client.get(f'/lists/users/{correct_user.email}/')
+        self.assertEqual(response.context["owner"], correct_user)
