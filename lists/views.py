@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from typing import Optional
 
 from lists.models import Item, List
-from lists.forms import ItemForm, ExistingListItemForm
+from lists.forms import ItemForm, ExistingListItemForm, NewListForm
 
 User = get_user_model()
 
@@ -29,14 +29,12 @@ def view_list(request: HttpRequest, list_id: int) -> HttpResponse:
 
 def new_list(request: HttpRequest) -> HttpResponse:
     """Функция представления создает список дел"""
-    form = ItemForm(data=request.POST)
+    form = NewListForm(data=request.POST)
     if form.is_valid():
-        todo_list = List()
-        todo_list.owner = request.user
-        todo_list.save()
-        form.save(for_list=todo_list)
+        todo_list = form.save(owner=request.user)
         return redirect(todo_list)
-    return render(request, 'home.html', {"form": form})
+
+    return render(request, 'home.html', {'form': form})
 
 
 def my_lists(request: HttpRequest, email: Optional[str] = None) -> HttpResponse:
@@ -46,3 +44,4 @@ def my_lists(request: HttpRequest, email: Optional[str] = None) -> HttpResponse:
     """
     owner = User.objects.get(email=email)
     return render(request, 'my_lists.html', {"owner": owner})
+

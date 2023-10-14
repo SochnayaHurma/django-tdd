@@ -1,9 +1,11 @@
 from django.test import TestCase
 from django.utils.html import escape
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
+from unittest.mock import Mock, patch
 
+from lists.views import new_list
 from lists.models import Item, List
 from lists.forms import (
     ItemForm, ExistingListItemForm,
@@ -34,9 +36,9 @@ class NewListTest(TestCase):
 
     def test_can_save_a_POST_request(self):
         """
-        Тест: пробует отправить POST запрос и получить в теле ответа отправленную запись
+        Тест: после POST запроса ожидаем появляние записи в базе данных
         """
-        response = self.client.post("/lists/new", data={
+        self.client.post("/lists/new", data={
             'text': 'A new list item'
         })
         self.assertEqual(Item.objects.count(), 1)
@@ -82,6 +84,15 @@ class NewListTest(TestCase):
         response = self.client.post("/lists/new", data={"text": ""})
         self.assertIsInstance(response.context.get("form"), ItemForm)
 
+    def test_for_invalid_input_doesnt_save_but_shows_errors(self) -> None:
+        """
+        Тест: пустые значения в POST запросе не создают объект в базе данных
+        и сигнализируют об этом ошибкой
+        """
+        response = self.client.post('/lists/new', data={'text': ''})
+        self.assertEqual(Item.objects.count(), 0)
+        self.assertContains(response, escape(EMPTY_ITEM_ERROR))
+
     def test_list_owner_is_saved_if_user_is_authenticated(self) -> None:
         """
         Тест: атрибут owner у созданного объекта списка после POST запроса заполняется
@@ -89,7 +100,7 @@ class NewListTest(TestCase):
         """
         user = User.objects.create(email='abc@mail.ru')
         self.client.force_login(user)
-        self.client.post('/lists/new/', data={'text': 'new_item'})
+        self.client.post('/lists/new', data={'text': 'new_item'})
         todo_list = List.objects.first()
         self.assertEqual(todo_list.owner, user)
 
@@ -230,3 +241,81 @@ class MyListsTest(TestCase):
         correct_user = User.objects.create(email='exprected@owner.com')
         response = self.client.get(f'/lists/users/{correct_user.email}/')
         self.assertEqual(response.context["owner"], correct_user)
+
+
+@patch('lists.views.NewListForm')
+@patch('lists.views.redirect')
+class NewListViewUnitText(TestCase):
+
+    def setUp(self):
+        self.request = HttpRequest()
+        self.request.POST['text'] = 'new list item'
+        self.request.user = Mock()
+        self.request.user.email = 'bobik@gmail.com'
+
+    def test_passes_POST_data_to_NewListForm(self, mock_redirect: Mock, mockNewListForm: Mock) -> None:
+        """
+        Тест: Проверяет что в представлении в конструктор класса ListForm были переданны  POSt данные
+        """
+        new_list(self.request)
+        mockNewListForm.assert_called_once_with(data=self.request.POST)
+
+    def test_saves_form_with_owner_if_form_valid(
+            self, mock_redirect: Mock, mockNewListForm: Mock) -> None:
+        """
+        Тест: Представление вызывает метод save и передает ему объект текущего пользователя
+        """
+        mock_form = mockNewListForm.return_value
+        mock_form.is_valid.return_value = True
+
+        new_list(self.request)
+        mock_form.save.assert_called_once_with(owner=self.request.user)
+
+    def test_redirects_to_form_returned_object_is_form_valid(
+            self, mock_redirect: Mock, mockNewListForm: Mock
+    ) -> None:
+        """
+        Тест: При is_valid=True ожидаем ответ перенаправляющий нас
+        на объект созданный методом .save()
+        """
+        mock_form = mockNewListForm.return_value
+        mock_form.is_valid.return_value = True
+
+        response = new_list(self.request)
+
+        self.assertEqual(response, mock_redirect.return_value)
+        mock_redirect.assert_called_once_with(mock_form.save.return_value)
+
+    @patch('lists.views.render')
+    def test_renders_home_template_with_form_if_form_invalid(
+            self, mock_render: Mock, mock_redirect: Mock,
+            mockNewListForm: Mock
+    ) -> None:
+        """
+        Тест: ожидаем что представление в случае невалидной формы возврващает
+        ожидаемый HTML документ
+        """
+        mock_form = mockNewListForm.return_value
+        mock_form.is_valid.return_value = False
+
+        response = new_list(self.request)
+
+        self.assertEqual(response, mock_render.return_value)
+        mock_render.assert_called_once_with(
+            self.request, 'home.html',
+            {"form": mock_form}
+        )
+
+    def test_does_not_save_if_form_invalid(
+            self, mock_redirect: Mock, mockNewListForm: Mock
+    ) -> None:
+        """
+        Тест: метод .save формы в представлении должен вызываться строго после
+        метода .is_valid возвращаемому True
+        """
+        mock_form = mockNewListForm.return_value
+        mock_form.is_valid.return_value = False
+        new_list(self.request)
+        self.assertFalse(mock_form.save.called)
+
+

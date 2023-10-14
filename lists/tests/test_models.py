@@ -1,8 +1,13 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.contrib.auth import get_user_model
+
+from unittest.mock import Mock, patch
 
 from lists.models import Item, List
 
+
+User = get_user_model()
 
 class ListModelTest(TestCase):
     """
@@ -12,6 +17,47 @@ class ListModelTest(TestCase):
         """Тест на выдачу абсолютного пути на каждый объект модели"""
         todo_list = List.objects.create()
         self.assertEqual(todo_list.get_absolute_url(), f"/lists/{todo_list.id}/")
+
+    def test_create_new_creates_list_and_first_item(self) -> None:
+        """
+        Тест: Метод .creates_new корректно генерирует и сохраняет объект списка
+        и заполняет его атрибуты указанными аргументами
+        """
+        text = 'new item text'
+        List.creates_new(first_item_text=text)
+        new_item = Item.objects.first()
+        self.assertEqual(new_item.text, text)
+        new_list = List.objects.first()
+        self.assertEqual(new_item.list, new_list)
+
+    def test_create_new_optionally_saves_owner(self) -> None:
+        """
+        Тест: creates_new опционально сохраняет владельца если он не Анонимен
+        """
+        user = User.objects.create()
+        List.creates_new(first_item_text='new item text', owner=user)
+        new_list = List.objects.first()
+        self.assertEqual(new_list.owner, user)
+
+    def test_lists_can_have_owners(self) -> None:
+        """
+        Тест: списки корректно принимают владельца в атрибут owner
+        """
+        List(owner=User())
+
+    def test_list_owner_is_optional(self) -> None:
+        """
+        Тест: атрибут owner может быть опционален и не возбуждает исключение
+        """
+        List().full_clean()
+
+    def test_create_return_new_list_object(self) -> None:
+        """
+        Тест: метод create_new возвращает новый объект списка
+        """
+        returned = List.creates_new(first_item_text='new item text')
+        new_list = List.objects.first()
+        self.assertEqual(new_list, returned)
 
 
 class ItemModelTest(TestCase):
@@ -77,3 +123,4 @@ class ItemModelTest(TestCase):
         """Тест: Строковое представление объекта должно быть равно атрибуту text"""
         item = Item(text="some text")
         self.assertEqual(str(item), "some text")
+

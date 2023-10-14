@@ -1,6 +1,8 @@
 from django.test import TestCase
 
-from lists.forms import (ItemForm, ExistingListItemForm,
+from unittest.mock import Mock, patch
+
+from lists.forms import (ItemForm, ExistingListItemForm, NewListForm,
                          EMPTY_ITEM_ERROR, DUPLICATE_ITEM_ERROR)
 from lists.models import List, Item
 
@@ -20,15 +22,6 @@ class ItemFormTest(TestCase):
         form = ItemForm(data={'text': ''})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors.get('text'), [EMPTY_ITEM_ERROR])
-
-    def test_form_save_handles_saving_to_a_list(self) -> None:
-        """Тест: после вызова метода .save от объекта forms появляется запись в БД"""
-        todo_list = List.objects.create()
-        form = ItemForm(data={'text': 'do me'})
-        new_item = form.save(for_list=todo_list)
-        self.assertEqual(new_item, Item.objects.first())
-        self.assertEqual(new_item.text, 'do me')
-        self.assertEqual(new_item.list, todo_list)
 
 
 class ExistingListItemFormTest(TestCase):
@@ -62,3 +55,79 @@ class ExistingListItemFormTest(TestCase):
         form = ExistingListItemForm(for_list=todo_list, data={"text": "qweqwe"})
         new_item = form.save()
         self.assertEqual(new_item, Item.objects.all()[0])
+
+
+class NewListFormTest(TestCase):
+    """
+    Набор тестов проверяющих функционал класса формы
+    """
+
+    # @patch('lists.forms.List')
+    # @patch('lists.forms.Item')
+    # def test_save_creates_new_list_and_item_from_post_data(
+    #         self, mockItem: Mock, mockList: Mock
+    # ) -> None:
+    #     mock_item = mockItem.return_value
+    #     mock_list = mockList.return_value
+    #     user = Mock()
+    #
+    #     form = NewListForm(data={'text': 'new item text'})
+    #     form.is_valid()
+    #
+    #     def check_item_text_and_list() -> None:
+    #         """
+    #         Проверка состояние, которое должно быть перед вызовом метода .save
+    #         """
+    #         self.assertEqual(mock_item.text, 'new item text')
+    #         self.assertEqual(mock_item.list, mock_list)
+    #         self.assertTrue(mock_list.save.called)
+    #
+    #     mock_item.save.side_effect = check_item_text_and_list
+    #
+    #     form.save(owner=user)
+    #     self.assertTrue(mock_item.save.called)
+
+    @patch('lists.forms.List.creates_new')
+    def test_save_creates_new_list_from_post_data_if_user_not_authenticated(
+            self, mock_List_creates_new: Mock
+    ) -> None:
+        """
+        Тест: форма корректно сохраняется если пользователь не аутентифицирован
+        """
+        anonymous_user = Mock(is_authenticated=False)
+        form = NewListForm(data={"text": "new item text"})
+        form.is_valid()
+        form.save(owner=anonymous_user)
+
+        mock_List_creates_new.assert_called_once_with(
+            first_item_text="new item text"
+        )
+
+    @patch('lists.forms.List.creates_new')
+    def test_save_creates_new_list_with_owner_if_user_authenticated(
+            self, mock_List_create_new: Mock
+    ) -> None:
+        """
+        Тест: в случае если пользователь аутентифицирован мы заполняем связь списка
+        с объектом пользователя
+        """
+        user = Mock(is_authenticated=True)
+        form = NewListForm(data={"text": "new item text"})
+        form.is_valid()
+        form.save(owner=user)
+        mock_List_create_new.assert_called_once_with(
+            first_item_text='new item text',
+            owner=user
+        )
+
+    @patch('lists.forms.List.creates_new')
+    def test_save_returns_new_list_object(
+            self, mock_List_creates_new: Mock) -> None:
+        """
+        Тест: метод save возвращает созданный объект списка
+        """
+        user = Mock(is_authenticated=True)
+        form = NewListForm(data={'text': 'new item text'})
+        form.is_valid()
+        todo_list = form.save(owner=user)
+        self.assertEqual(todo_list, mock_List_creates_new.return_value)
