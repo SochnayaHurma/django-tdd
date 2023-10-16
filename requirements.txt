@@ -2,4 +2,3 @@ fabric
 selenium
 django
 gunicorn
-sqlite3==2.6.0
