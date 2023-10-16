@@ -2,4 +2,4 @@ fabric
 selenium
 django
 gunicorn
-pysqlite3
+sqlite3
