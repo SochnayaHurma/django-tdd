@@ -1,3 +1,5 @@
+import datetime
+
 from selenium.webdriver import Firefox
 from selenium.common import WebDriverException
 from selenium.webdriver.common.by import By
@@ -8,11 +10,13 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from typing import Callable
 import time
 import os
+import datetime
 
 from .server_tools import reset_database
 
 
 MAX_WAIT = 10
+SCREEN_DUMP_LOCATION = os.path.join(os.path.abspath(__file__), 'screendumps')
 
 
 def wait(fn: Callable) -> Callable:
@@ -36,8 +40,42 @@ class FunctionalTest(StaticLiveServerTestCase):
             self.live_server_url = f'http://{self.staging_server}'
             reset_database(self.staging_server)
 
+    def _get_filename(self):
+        """Получить имя файла"""
+        timestamp = datetime.datetime.now().isoformat().replace(':', '.')[:19]
+        return '{folder}/{classname}.{method}-window{window_id}-{timestamp}'.format(
+            folder=SCREEN_DUMP_LOCATION,
+            classname=self.__class__.__name__,
+            method=self._testMethodName,
+            window_id=self._window_id,
+            timestamp=timestamp
+        )
+
+    def take_screenshot(self):
+        filename = f"{self._get_filename()}.png"
+        print('screenshotting to', filename)
+        self.browser.get_screenshot_as_file(filename)
+
+    def dump_html(self):
+        filename = f"{self._get_filename()}.html"
+        print("dumping page HTML to", filename)
+        with open(filename, 'w') as file:
+            file.write(self.browser.page_source)
+
     def tearDown(self) -> None:
+        if self._test_has_failed():
+            if not os.path.exists(SCREEN_DUMP_LOCATION):
+                os.makedirs(SCREEN_DUMP_LOCATION)
+            for idx, handle in enumerate(self.browser.window_handles):
+                self._window_id = idx
+                self.browser.switch_to.window(handle)
+                self.take_screenshot()
+                self.dump_html()
         self.browser.quit()
+        super().tearDown()
+
+    def _test_has_failed(self):
+        return any(error for (method, error) in self._outcome.errors)
 
     @staticmethod
     @wait
