@@ -67,3 +67,4 @@ class MyListsTest(FunctionalTest):
                 []
             )
         )
+        self.fail("Ошибочка!")
